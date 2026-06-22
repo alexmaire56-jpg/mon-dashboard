@@ -1,0 +1,52 @@
+=================================================
+  PASSAGE À SQLITE — base de données locale
+=================================================
+
+Tes données vivent maintenant dans un vrai fichier base de
+données : training.db (créé automatiquement au 1er démarrage,
+à la racine du projet).
+
+CE QUI CHANGE POUR TOI : RIEN à faire de spécial.
+Au premier "npm run dev" après cette mise à jour, tes anciennes
+données (strava-cache.json, health-cache.json) sont migrées
+automatiquement vers training.db. Le dashboard fonctionne pareil.
+
+-------------------------------------------------
+POURQUOI C'EST MIEUX
+-------------------------------------------------
+- Plus robuste : un seul fichier, pas de risque de JSON corrompu
+- Plus rapide pour les grosses historiques
+- Permet de vraies requêtes (voir ci-dessous)
+- Base solide avant un futur déploiement (migration facile
+  vers une base en ligne type Postgres si tu veux y accéder
+  depuis ton téléphone un jour)
+
+-------------------------------------------------
+VOIR TES DONNÉES DIRECTEMENT DANS VS CODE
+-------------------------------------------------
+1. Dans VS Code : icône Extensions (carrés empilés, barre de
+   gauche) → cherche "SQLite Viewer" → Installer.
+2. Clique-droit sur "training.db" dans l'explorateur → 
+   "Open With..." → "SQLite Viewer".
+3. Tu vois tes tables comme dans Excel : activities,
+   activity_details, health_days. Tu peux même taper du SQL.
+
+Exemple de requête à essayer (onglet "Query") :
+   SELECT date, distance_km, avg_hr FROM activities
+   WHERE type = 'Run' ORDER BY date DESC LIMIT 10;
+
+-------------------------------------------------
+NOUVEL ENDPOINT
+-------------------------------------------------
+/api/strava/monthly → totaux par mois et par sport (km, minutes,
+nombre de séances). Utile si tu veux un futur graphique par mois.
+
+-------------------------------------------------
+SAUVEGARDE / RESET
+-------------------------------------------------
+- Pour sauvegarder tes données : copie le fichier training.db
+  ailleurs (c'est un fichier normal, comme un .docx).
+- Pour repartir de zéro : supprime training.db (et ses
+  variantes training.db-shm / training.db-wal s'il y en a),
+  relance le serveur.
+=================================================

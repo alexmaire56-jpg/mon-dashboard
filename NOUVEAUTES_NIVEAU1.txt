@@ -1,0 +1,43 @@
+=================================================
+  NIVEAU 1 — ANALYSE AVANCÉE (ajouté)
+=================================================
+
+Une fois Strava connecté et synchronisé, une nouvelle section
+"ANALYSE AVANCÉE" apparaît en bas du dashboard avec :
+
+• FORME / FATIGUE / FRAÎCHEUR (CTL/ATL/TSB)
+  Le graphique de référence des coachs. Te dit si tu es frais
+  pour une course ou en pleine charge. Statut interprété en clair.
+
+• TEMPS PAR ZONE DE FC (Z1 à Z5)
+  Où tu passes ton temps cardiaque sur les 6 dernières semaines.
+
+• RÉPARTITION D'INTENSITÉ (modèle 80/20)
+  Cours-tu assez en facile ? Détection de la "zone grise".
+
+• DÉCOUPLAGE AÉROBIE
+  La dérive de ta FC sur les sorties longues (indicateur d'endurance).
+
+• RECORDS PERSONNELS
+  Tes meilleurs efforts par distance (5k, 10k, semi…).
+
+• EFFICACITÉ AÉROBIE
+  Vitesse pour une FC donnée — monte quand tu progresses.
+
+-------------------------------------------------
+RÉGLAGE IMPORTANT
+-------------------------------------------------
+En haut de la section avancée, renseigne tes 3 valeurs FC :
+  - FC max    (ta plus haute FC observée, ~190 par défaut)
+  - FC seuil  (FC tenable ~1h d'effort)
+  - FC repos  (au réveil)
+Les zones et calculs s'ajustent en direct.
+
+-------------------------------------------------
+NOTE SYNCHRO
+-------------------------------------------------
+La 1re synchro récupère le détail (FC seconde/seconde) des
+40 courses les plus récentes (limite Strava). Si le message
+indique des courses restantes, reclique "Synchroniser" pour
+compléter l'historique (par paquets, sans dépasser les quotas).
+=================================================

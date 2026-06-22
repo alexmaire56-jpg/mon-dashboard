@@ -1,0 +1,65 @@
+=================================================
+  CONNECTER TON DASHBOARD À STRAVA
+=================================================
+
+Tu n'as à faire ça qu'UNE SEULE FOIS.
+
+------------------------------------------------
+ÉTAPE 1 — Créer ton "application" Strava
+------------------------------------------------
+1. Va sur : https://www.strava.com/settings/api
+   (connecte-toi à ton compte Strava si demandé)
+
+2. Remplis le formulaire "My API Application" :
+   - Application Name      : Mon Dashboard  (ce que tu veux)
+   - Category              : Training
+   - Club                  : (laisse vide)
+   - Website               : http://localhost:5173
+   - Authorization Callback Domain : localhost
+     >>> TRÈS IMPORTANT : tape exactement  localhost
+         (pas d'http://, pas de port, juste "localhost")
+
+3. Valide. Strava te montre alors :
+   - Client ID       (un nombre, ex: 123456)
+   - Client Secret   (une longue suite de lettres/chiffres)
+
+------------------------------------------------
+ÉTAPE 2 — Coller tes identifiants dans le projet
+------------------------------------------------
+1. Dans VS Code, ouvre le fichier ".env" (à la racine du projet).
+   (S'il n'apparaît pas, il est peut-être masqué : il est bien là.)
+
+2. Remplis les deux lignes, par exemple :
+
+   STRAVA_CLIENT_ID=123456
+   STRAVA_CLIENT_SECRET=colle_ici_ton_secret
+
+   Pas d'espaces, pas de guillemets. Sauvegarde (Cmd + S).
+
+   >>> Ce fichier reste sur ton Mac. Ne le partage avec personne :
+       le Client Secret est comme un mot de passe.
+
+------------------------------------------------
+ÉTAPE 3 — Lancer
+------------------------------------------------
+Dans le terminal de VS Code :
+
+   npm install      (à faire une seule fois)
+   npm run dev
+
+Ça démarre 2 choses en même temps :
+   - SERVER  (le backend Strava, port 3001)
+   - CLIENT  (le dashboard, port 5173)
+
+Ouvre http://localhost:5173 dans ton navigateur.
+
+------------------------------------------------
+ÉTAPE 4 — Connecter
+------------------------------------------------
+1. Clique sur le bouton orange "Connecter Strava".
+2. Strava te demande d'autoriser → clique "Authorize".
+3. Tu reviens sur le dashboard.
+4. Clique "↻ Synchroniser Strava" → tes activités arrivent.
+
+Les fois suivantes : juste "npm run dev" puis "Synchroniser".
+=================================================

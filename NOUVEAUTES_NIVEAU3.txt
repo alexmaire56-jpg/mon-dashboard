@@ -1,0 +1,41 @@
+=================================================
+  NOUVEAUTÉS : Apple Santé · Coach IA · Affinage
+=================================================
+
+--- 1. APPLE SANTÉ (récupération) ---
+Fait remonter sommeil, VFC (variabilité cardiaque) et FC de repos
+depuis ton iPhone, automatiquement, sur le même WiFi que ton Mac.
+
+Mise en place (une fois) :
+1. Installe "Health Auto Export" sur ton iPhone (App Store).
+   (Les automations nécessitent l'abonnement / essai gratuit.)
+2. Dans l'app : New Automation → type "REST API" → format JSON.
+3. URL = celle affichée dans le dashboard (section Récupération),
+   du genre  http://192.168.X.X:3001/api/health/ingest
+   (ton Mac + iPhone sur le même WiFi, serveur lancé).
+4. Métriques à cocher : Heart Rate Variability, Resting Heart Rate,
+   Sleep Analysis.
+5. "Manual Export" pour tester → les données s'affichent.
+
+Note : macOS peut demander d'autoriser les connexions entrantes
+la 1re fois (clique "Autoriser").
+
+--- 2. COACH IA ---
+Un coach qui lit tes données (charge, fraîcheur, intensité, récup,
+objectif) et te conseille / génère ta semaine.
+
+Activation :
+1. Crée une clé API sur https://console.anthropic.com
+   (compte API séparé de l'abonnement Claude.ai ; usage facturé,
+    mais quelques requêtes coûtent des centimes.)
+2. Colle-la dans .env :  ANTHROPIC_API_KEY=sk-ant-...
+3. Relance le serveur (npm run dev).
+4. Section "Coach IA" : pose une question ou clique "Demander au coach".
+
+--- 3. AFFINAGE ---
+- Détection auto du type de séance (Fractionné, Seuil/Tempo,
+  Sortie longue, Récup, Endurance) — section "Dernières séances".
+- Le vélo / renfo / autres sports sont déjà comptés dans la charge.
+- Objectif de course : définis distance + date + temps visé,
+  le dashboard affiche semaines restantes et projection vs objectif.
+=================================================

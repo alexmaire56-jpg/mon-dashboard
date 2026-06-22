@@ -1,0 +1,31 @@
+==========================================
+  CARNET D'ENTRAÎNEMENT - mode d'emploi
+==========================================
+
+1. Dézippe ce dossier où tu veux (ex: ton Bureau).
+
+2. Ouvre le dossier dans VS Code :
+   Fichier > Ouvrir le dossier > choisis "mon-dashboard"
+
+3. Ouvre le terminal intégré :
+   Menu Terminal > Nouveau terminal
+   (ou Ctrl + ` )
+
+4. Tape ces deux commandes, l'une après l'autre :
+
+   npm install
+   npm run dev
+
+5. Le terminal affiche une adresse, genre :
+   ➜  Local:   http://localhost:5173/
+
+   Clique dessus (ou copie-la dans ton navigateur).
+
+Le dashboard s'ouvre. Clique sur "+ Importer" et charge
+ton fichier activities.csv (Strava) ou export.xml (Apple Santé).
+
+Tes données sont sauvegardées dans ton navigateur.
+
+Pour arrêter le serveur : Ctrl + C dans le terminal.
+Pour le relancer plus tard : npm run dev
+==========================================
