@@ -12,6 +12,7 @@ import { C, Card, Stat, levelColor, formStatus, SessionCard, SessionAnalysis, De
 import ProgressionSection from "./ProgressionSection.jsx";
 import HistoryCalendar from "./HistoryCalendar.jsx";
 import { apiUrl } from "./api.js";
+import UserProfile from "./UserProfile.jsx";
 
 /* ---------- parsing Strava CSV ---------- */
 function parseCSV(text) {
@@ -119,6 +120,7 @@ export default function App() {
   const [goal, setGoal] = useState(() => { try { return JSON.parse(localStorage.getItem("goal")) || null; } catch { return null; } });
   const [goalForm, setGoalForm] = useState({ race: "", distanceKm: "10", date: "", targetTime: "" });
   const [hrSettings, setHrSettings] = useState(() => { try { return JSON.parse(localStorage.getItem("hr-settings")) || { maxHr: 190, lthr: 170, restHr: 50 }; } catch { return { maxHr: 190, lthr: 170, restHr: 50 }; } });
+  const [showProfile, setShowProfile] = useState(false);
   const fileRef = useRef();
 
   useEffect(() => {
@@ -239,6 +241,7 @@ export default function App() {
               <button onClick={() => { if (!backendUp) { setMsg("Backend hors ligne."); return; } window.location.href = apiUrl("/api/strava/auth"); }} style={{ background: "#fc4c02", color: "#fff", border: "none", borderRadius: 9, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Connecter Strava</button>
             )}
             <button onClick={() => fileRef.current?.click()} style={{ background: C.accent, color: "#1a0d06", border: "none", borderRadius: 9, padding: "10px 16px", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>+ Importer</button>
+            <button onClick={() => setShowProfile((v) => !v)} style={{ background: C.panel2, color: C.mut, border: `1px solid ${C.line}`, borderRadius: 9, padding: "10px 14px", cursor: "pointer", fontSize: 14 }}>👤 Profil</button>
           </div>
           <input ref={fileRef} type="file" accept=".csv,.xml" multiple style={{ display: "none" }} onChange={(e) => { if (e.target.files?.length) handleFiles(Array.from(e.target.files)); e.target.value = ""; }} />
         </div>
@@ -247,6 +250,8 @@ export default function App() {
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: !backendUp ? C.red : strava.connected ? C.green : C.dim }} />
           <span style={{ color: C.mut }}>{!backendUp ? "Backend hors ligne — lance « npm run dev »." : strava.connected ? `Strava connecté${strava.athlete?.firstname ? ` · ${strava.athlete.firstname}` : ""}` : "Strava non connecté."}</span>
         </div>
+
+        {showProfile && <UserProfile onClose={() => setShowProfile(false)} />}
 
         {msg && <div style={{ background: C.panel2, border: `1px solid ${C.line}`, borderRadius: 9, padding: "10px 14px", color: C.mut, fontSize: 13, marginBottom: 18 }}>{msg}</div>}
 

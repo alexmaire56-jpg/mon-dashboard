@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
-import { buildCalendarData, impactTag, activityLoad, fmtPace, fmtDur, dayKey } from "./analytics.js";
+import React, { useState, useMemo, useEffect } from "react";
+import { buildCalendarData, impactTag, activityLoad, fmtPace, fmtDur, dayKey, recoveryAdviceEnriched, fetchWeatherForDate } from "./analytics.js";
 import { C, Card } from "./ui.jsx";
+import { loadProfile } from "./UserProfile.jsx";
 
 const MONTHS_FR = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
 const DAYS_FR = ["L", "M", "M", "J", "V", "S", "D"];
@@ -75,6 +76,14 @@ const MonthGrid = ({ year, month, calDays, onDayClick, selectedDay }) => {
 
 /* ── détail d'un jour sélectionné ── */
 const DayDetail = ({ dayData, onClose }) => {
+  const [tempC, setTempC] = useState(null);
+  const profile = loadProfile();
+
+  useEffect(() => {
+    const d = dayData.date;
+    fetchWeatherForDate(d, profile.lat, profile.lon).then(setTempC);
+  }, [dayData.date]);
+
   if (!dayData?.sessions?.length) return null;
   const date = new Date(dayData.date + "T12:00:00");
   return (
@@ -82,12 +91,14 @@ const DayDetail = ({ dayData, onClose }) => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
         <div style={{ fontWeight: 600, fontSize: 14 }}>
           {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          {tempC !== null && <span style={{ color: C.mut, fontWeight: 400, fontSize: 12, marginLeft: 10 }}>🌡️ {tempC}°C ce jour-là</span>}
         </div>
         <button onClick={onClose} style={{ background: "transparent", border: "none", color: C.dim, cursor: "pointer", fontSize: 16 }}>✕</button>
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         {dayData.sessions.map((s, i) => {
           const pace = s.type === "Course" && s.distanceKm > 0 ? s.durationMin / s.distanceKm : null;
+          const recov = recoveryAdviceEnriched(s, { acwr: dayData.acwr, profile, tempC });
           return (
             <div key={i} style={{ padding: "10px 12px", background: C.panel, borderRadius: 8, borderLeft: `3px solid ${s.impact.color}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
@@ -102,6 +113,10 @@ const DayDetail = ({ dayData, onClose }) => {
                 {s.elevationM > 0 && <span>↑ {Math.round(s.elevationM)} m</span>}
               </div>
               <div style={{ fontSize: 12, color: C.dim, marginTop: 6, lineHeight: 1.5 }}>{s.impact.detail}</div>
+              <div style={{ marginTop: 10, padding: "8px 10px", background: C.panel2, borderRadius: 7, borderLeft: `3px solid ${recov.level === "🟢" ? C.green : recov.level === "🟡" ? C.amber : C.red}` }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: C.text }}>{recov.level} {recov.label}</div>
+                <div style={{ fontSize: 11.5, color: C.dim, marginTop: 3 }}>{recov.explanation} — {recov.conseil}</div>
+              </div>
             </div>
           );
         })}
@@ -161,7 +176,7 @@ const HistoryList = ({ sessions }) => {
           const d = s.date instanceof Date ? s.date : new Date(s.date);
           const pace = s.type === "Course" && s.distanceKm > 0 ? s.durationMin / s.distanceKm : null;
           const impact = impactTag(s, 1.0);
-          const load = activityLoad(s);
+          const recov = recoveryAdviceEnriched(s, { profile: loadProfile() });
           return (
             <div key={i} style={{ display: "grid", gridTemplateColumns: "90px 1fr auto", gap: 10, alignItems: "center", padding: "9px 12px", background: C.panel2, borderRadius: 8, fontSize: 13, borderLeft: `3px solid ${impact.color}` }}>
               <span style={{ color: C.dim, fontSize: 11.5 }}>{d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit" })}</span>
@@ -173,7 +188,7 @@ const HistoryList = ({ sessions }) => {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 11, color: impact.color, fontWeight: 600 }}>{impact.tag}</div>
-                <div style={{ fontSize: 10.5, color: C.dim, marginTop: 2 }}>charge {Math.round(load)}</div>
+                <div style={{ fontSize: 11, color: recov.level === "🟢" ? C.green : recov.level === "🟡" ? C.amber : C.red, marginTop: 3 }}>{recov.level} {recov.label}</div>
               </div>
             </div>
           );

@@ -459,3 +459,151 @@ export function detectAnomalies(runs) {
 
   return anomalies.slice(-5); // les 5 plus récentes
 }
+
+/* ---------- temps de récupération conseillé après une séance ---------- */
+export function recoveryAdvice(session, context = {}) {
+  const { acwr = 1.0, vo2max = null } = context;
+  const type = session.type || "Autre";
+  const dur = session.durationMin || 0;
+  const hr = session.avgHr || null;
+  const intensity = activityIntensity(session);
+
+  const baseHours = { "Course": 24, "Vélo": 16, "Natation": 12, "Renfo": 20, "Marche": 8, "Autre": 12 }[type] || 12;
+  const factors = [];
+  let total = baseHours;
+
+  if (hr) {
+    if (hr > 175) { total += 12; factors.push(`FC très élevée (${Math.round(hr)} bpm)`); }
+    else if (hr > 160) { total += 6; factors.push(`FC élevée (${Math.round(hr)} bpm)`); }
+    else if (hr < 135) { total -= 4; factors.push("effort facile, FC basse"); }
+  }
+
+  if (dur > 90) { total += 12; factors.push(`sortie longue (${Math.round(dur)} min)`); }
+  else if (dur > 60) { total += 6; factors.push("durée soutenue"); }
+  else if (dur < 30) { total -= 4; factors.push("séance courte"); }
+
+  if (acwr > 1.4) { total += 12; factors.push(`charge globale élevée (ACWR ${acwr.toFixed(2)})`); }
+  else if (acwr > 1.2) { total += 6; factors.push(`charge en hausse (ACWR ${acwr.toFixed(2)})`); }
+  else if (acwr < 0.8) { total -= 4; factors.push("charge basse"); }
+
+  if (vo2max) {
+    if (vo2max > 55) { total -= 4; factors.push(`bonne condition physique (VO2max ${vo2max})`); }
+    else if (vo2max < 40) { total += 4; }
+  }
+
+  if (type === "Course" && intensity > 0.80) { total += 8; factors.push("séance très intense"); }
+  else if (type === "Course" && intensity > 0.65) { total += 4; factors.push("allure soutenue"); }
+
+  total = Math.max(8, Math.min(72, Math.round(total / 4) * 4));
+
+  const level = total <= 16 ? "🟢" : total <= 32 ? "🟡" : "🔴";
+  const conseil = total <= 16
+    ? "Tu peux t'entraîner dès demain."
+    : total <= 32
+    ? "Séance légère possible, évite l'intense."
+    : "Privilégie le repos ou une activité très légère.";
+
+  return {
+    hours: total,
+    level,
+    label: `${total}h de récup conseillée`,
+    explanation: factors.length ? factors.join(", ") : "séance modérée",
+    conseil,
+  };
+}
+
+/* ---------- météo historique via Open-Meteo (gratuit, sans clé) ---------- */
+// Récupère la température moyenne à Paris pour une date donnée
+// Utilise un cache en mémoire pour ne pas re-fetcher la même date
+const weatherCache = {};
+export async function fetchWeatherForDate(dateISO, lat = 48.85, lon = 2.35) {
+  const day = dateISO.slice(0, 10);
+  if (weatherCache[day] !== undefined) return weatherCache[day];
+  try {
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${day}&end_date=${day}&hourly=temperature_2m&timezone=Europe%2FParis`;
+    const r = await fetch(url);
+    if (!r.ok) { weatherCache[day] = null; return null; }
+    const data = await r.json();
+    const temps = data?.hourly?.temperature_2m;
+    if (!temps?.length) { weatherCache[day] = null; return null; }
+    // température moyenne sur la journée
+    const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+    weatherCache[day] = +avg.toFixed(1);
+    return weatherCache[day];
+  } catch {
+    weatherCache[day] = null;
+    return null;
+  }
+}
+
+/* ---------- calcul récupération enrichi (profil + météo) ---------- */
+export function recoveryAdviceEnriched(session, context = {}) {
+  const { acwr = 1.0, vo2max = null, profile = {}, tempC = null } = context;
+  const { age = 23, weeklyFrequency = 5 } = profile; // défauts : 20-25 ans, 5x/semaine
+  const type = session.type || "Autre";
+  const dur = session.durationMin || 0;
+  const hr = session.avgHr || null;
+  const intensity = activityIntensity(session);
+
+  const baseHours = { "Course": 20, "Vélo": 14, "Natation": 10, "Renfo": 18, "Marche": 6, "Autre": 10 }[type] || 10;
+  const factors = [];
+  let total = baseHours;
+
+  // ── niveau d'entraînement (coureur régulier = récup plus rapide) ──
+  if (weeklyFrequency >= 5) { total -= 6; }
+  else if (weeklyFrequency >= 3) { total -= 3; }
+
+  // ── âge ──
+  if (age < 25) { total -= 2; }
+  else if (age > 35) { total += 4; }
+  else if (age > 30) { total += 2; }
+
+  // ── FC ──
+  if (hr) {
+    if (hr > 175) { total += 10; factors.push(`FC très élevée (${Math.round(hr)} bpm)`); }
+    else if (hr > 162) { total += 5; factors.push(`FC élevée (${Math.round(hr)} bpm)`); }
+    else if (hr < 135) { total -= 4; factors.push("effort facile, FC basse"); }
+  }
+
+  // ── durée ──
+  if (dur > 90) { total += 10; factors.push(`sortie longue (${Math.round(dur)} min)`); }
+  else if (dur > 60) { total += 5; factors.push("durée soutenue"); }
+  else if (dur < 30) { total -= 4; factors.push("séance courte"); }
+
+  // ── ACWR ──
+  if (acwr > 1.4) { total += 10; factors.push(`charge globale élevée (ACWR ${acwr.toFixed(2)})`); }
+  else if (acwr > 1.2) { total += 5; factors.push(`charge en hausse (ACWR ${acwr.toFixed(2)})`); }
+  else if (acwr < 0.8) { total -= 3; }
+
+  // ── VO2max ──
+  if (vo2max && vo2max > 55) { total -= 3; factors.push(`bonne condition physique (VO2max ${vo2max})`); }
+
+  // ── type de séance ──
+  if (type === "Course" && intensity > 0.80) { total += 6; factors.push("séance très intense"); }
+  else if (type === "Course" && intensity > 0.65) { total += 3; factors.push("allure soutenue"); }
+
+  // ── météo : chaleur ──
+  if (tempC !== null) {
+    if (tempC >= 30) { total += 8; factors.push(`forte chaleur (${tempC}°C)`); }
+    else if (tempC >= 25) { total += 4; factors.push(`chaleur (${tempC}°C)`); }
+    else if (tempC <= 10) { total += 2; factors.push(`froid (${tempC}°C)`); }
+  }
+
+  total = Math.max(8, Math.min(60, Math.round(total / 4) * 4));
+
+  const level = total <= 16 ? "🟢" : total <= 28 ? "🟡" : "🔴";
+  const conseil = total <= 16
+    ? "Tu peux t'entraîner dès demain."
+    : total <= 28
+    ? "Séance légère possible, évite l'intense."
+    : "Privilégie le repos ou activité très légère.";
+
+  return {
+    hours: total,
+    level,
+    label: `${total}h de récup conseillée`,
+    explanation: factors.length ? factors.join(", ") : "séance modérée",
+    conseil,
+    tempC,
+  };
+}
